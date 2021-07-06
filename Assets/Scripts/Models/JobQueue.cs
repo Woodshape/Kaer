@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using System;
 
-public class JobQueue
-{
+public class JobQueue {
     Queue<Job> jobQueue;
 
     Action<Job> cbJobCreated;
@@ -11,32 +10,27 @@ public class JobQueue
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////////////
-    public JobQueue()
-    {
+    public JobQueue() {
         jobQueue = new Queue<Job>();
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
-    public void Enqueue(Job j)
-    {
-        if (j.jobTime < 0)
-        {
+    public void Enqueue(Job job) {
+        if (job.jobTime < 0) {
             //  A job time of less than 0 means it should be insta-completed.
-            j.DoWork(0);
+            job.DoWork(0);
             return;
         }
 
-        jobQueue.Enqueue(j);
+        jobQueue.Enqueue(job);
 
-        if (cbJobCreated != null)
-        {
-            cbJobCreated(j);
+        if (cbJobCreated != null) {
+            cbJobCreated(job);
         }
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
-    public Job Dequeue()
-    {
+    public Job Dequeue() {
         if (jobQueue.Count == 0)
             return null;
 
@@ -44,25 +38,21 @@ public class JobQueue
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
-    public void RegisterJobCreationCallback(Action<Job> cb)
-    {
+    public void RegisterJobCreationCallback(Action<Job> cb) {
         cbJobCreated += cb;
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
-    public void UnregisterJobCreationCallback(Action<Job> cb)
-    {
+    public void UnregisterJobCreationCallback(Action<Job> cb) {
         cbJobCreated -= cb;
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
-    public void Remove(Job j)
-    {
+    public void Remove(Job j) {
         // TODO: Check docs to see if there's a less memory/swappy solution
         List<Job> jobs = new List<Job>(jobQueue);
 
-        if (jobs.Contains(j) == false)
-        {
+        if (jobs.Contains(j) == false) {
             Debug.LogError("Trying to remove a job that doesn't exist on the queue.");
             return;
         }

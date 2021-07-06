@@ -17,7 +17,7 @@ using System.Xml.Serialization;
 // InstalledObjects sitting on top of the floor.
 public enum TileType { Empty, Floor };
 
-public enum ENTERABILITY { Yes, Never, Soon };
+public enum Enterability { Yes, Never, Soon };
 
 public class Tile : IXmlSerializable
 {
@@ -242,14 +242,24 @@ public class Tile : IXmlSerializable
         return ns;
     }
 
+    public bool HasFurniture() {
+        return furniture != null;
+    }
+
+    public void RemoveFurniture() {
+        furniture = null;
+        
+        cbTileChanged(this);
+    }
+
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////////////
-    public ENTERABILITY IsEnterable()
+    public Enterability DetermineEnterability()
     {
         // This returns true if you can enter this tile right this moment.
         if (movementCost == 0)
-            return ENTERABILITY.Never;
+            return Enterability.Never;
 
         // Check out furniture to see if it has a special block on enterability
         if (furniture != null && furniture.IsEnterable != null)
@@ -257,7 +267,7 @@ public class Tile : IXmlSerializable
             return furniture.IsEnterable(furniture);
         }
 
-        return ENTERABILITY.Yes;
+        return Enterability.Yes;
     }
 
     public Tile North()

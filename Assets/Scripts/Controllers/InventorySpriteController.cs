@@ -93,10 +93,10 @@ public class InventorySpriteController : MonoBehaviour {
             return;
         }
 
-        GameObject inv_go = inventoryGameObjectMap[inv];
+        GameObject invGO = inventoryGameObjectMap[inv];
 
         if (inv.stackSize > 0) {
-            Text text = inv_go.GetComponentInChildren<Text>();
+            Text text = invGO.GetComponentInChildren<Text>();
 
             if (text != null) {
                 text.text = inv.stackSize.ToString();
@@ -104,7 +104,7 @@ public class InventorySpriteController : MonoBehaviour {
         }
         else {
             //  Inventory stack has gone to 0, so we want to clean the inventory
-            Destroy(inv_go);
+            Destroy(invGO);
             inventoryGameObjectMap.Remove(inv);
             inv.UnregisterInventoryChangedCallback(OnInventoryChanged);
         }

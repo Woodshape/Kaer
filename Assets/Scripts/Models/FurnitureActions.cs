@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using System.Collections;
 
 public static class FurnitureActions
@@ -40,14 +41,63 @@ public static class FurnitureActions
         //                  else ???
         if (stockpile.tile.Inventory == null)
         {
-            //  empty
+            //  We are empty, so haul anything
+
+            //  Do we already have a job?
+            if (stockpile.JobCount() > 0) {
+                return;
+            }
+            
             Job j = new Job(
                 stockpile.tile,
                 null,
                 null,
                 0,
-                new Inventory[1] { new Inventory("steel_plates", 0) }
+                new Inventory[1] {  //  FIXME
+                    new Inventory("steel_plate", 0)
+                }
             );
+
+            stockpile.AddJob(j);
+        }
+        else if (stockpile.tile.inventory.stackSize < stockpile.tile.inventory.maxStackSize) {
+            //  We still have space on this stockpile
+            
+            //  Do we already have a job?
+            if (stockpile.JobCount() > 0) {
+                return;
+            }
+
+            Inventory desired = stockpile.tile.inventory.Clone();
+            desired.maxStackSize -= desired.stackSize;
+            desired.stackSize = 0;
+            
+            Job j = new Job(
+                stockpile.tile,
+                null,
+                null,
+                0,
+                new Inventory[1] {  
+                    desired
+                }
+            );
+            
+            j.RegisterJobWorkedCallback(JobWorked_Stockpile);
+
+            stockpile.AddJob(j);
+        }
+    }
+    
+    //////////////////////////////////////////////////////////////////////////////////////////////////////
+    public static void JobWorked_Stockpile(Job job) {
+        job.tile.furniture.RemoveJob(job);
+
+        //  TODO: change me
+        foreach (var inventory in job.inventoryRequirements.Values) {
+            if (inventory.stackSize > 0) {
+                job.tile.world.inventoryManager.PlaceInventoryOnTile(job.tile, inventory);
+                return;
+            }
         }
     }
 
@@ -62,16 +112,16 @@ public static class FurnitureActions
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
-    public static ENTERABILITY Door_IsEnterable(Furniture furn)
+    public static Enterability Door_IsEnterable(Furniture furn)
     {
         //Debug.Log("Door_IsEnterable");
         furn.SetFurnitureParameter("is_opening", 1);
 
         if (furn.GetFurnitureParameter("openness") >= 1)
         {
-            return ENTERABILITY.Yes;
+            return Enterability.Yes;
         }
 
-        return ENTERABILITY.Soon;
+        return Enterability.Soon;
     }
 }

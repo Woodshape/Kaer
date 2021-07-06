@@ -21,7 +21,7 @@ public class Furniture : IXmlSerializable
     //  A list of jobs the furniture creates on its own (so, no construction jobs etc.)
     List<Job> jobs;
 
-    public Func<Furniture, ENTERABILITY> IsEnterable;
+    public Func<Furniture, Enterability> IsEnterable;
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -252,6 +252,32 @@ public class Furniture : IXmlSerializable
         }
 
         return true;
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////
+    public int JobCount() {
+        return jobs.Count;
+    }
+    
+    //////////////////////////////////////////////////////////////////////////////////////////////////////
+    public void AddJob(Job job) {
+        jobs.Add(job);
+        
+        tile.world.jobQueue.Enqueue(job);
+    }
+    
+    //////////////////////////////////////////////////////////////////////////////////////////////////////
+    public void RemoveJob(Job job) {
+        jobs.Remove(job);
+        job.CancelJob();
+        tile.world.jobQueue.Remove(job);
+    }
+    
+    //////////////////////////////////////////////////////////////////////////////////////////////////////
+    public void ClearJobs() {
+        foreach (var job in jobs) {
+            RemoveJob(job);
+        }
     }
 
     //  Registers an action that will be called every Update

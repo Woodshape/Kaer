@@ -85,7 +85,7 @@ public class BuildModeController : MonoBehaviour
                 }
 
                 // FIXME: I don't like having to manually and explicitly set
-                // flags that preven conflicts. It's too easy to forget to set/clear them!
+                // flags that prevent conflicts. It's too easy to forget to set/clear them!
                 t.pendingFurnitureJob = j;
                 j.RegisterJobCancelCallback((job) => { job.tile.pendingFurnitureJob = null; });
 
@@ -97,6 +97,11 @@ public class BuildModeController : MonoBehaviour
         }
         else
         {
+            if (t.HasFurniture()) {
+                t.RemoveFurniture();
+                return;
+            }
+            
             // We are in tile-changing mode.
             t.Type = buildModeTile;
         }
