@@ -12,9 +12,7 @@ using System.Xml.Serialization;
 
 // InstalledObjects are things like walls, doors, and furniture (e.g. a sofa)
 
-public class Furniture : IXmlSerializable
-{
-
+public class Furniture : IXmlSerializable {
     protected Dictionary<string, float> furnParameters;
     protected Action<Furniture, float> updateActions;
 
@@ -26,26 +24,18 @@ public class Furniture : IXmlSerializable
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////////////
-    public void Update(float deltaTime)
-    {
-        if (updateActions != null)
-        {
+    public void Update(float deltaTime) {
+        if (updateActions != null) {
             updateActions(this, deltaTime);
         }
     }
 
     // This represents the BASE tile of the object -- but in practice, large objects may actually occupy
     // multile tiles.
-    public Tile tile
-    {
-        get; protected set;
-    }
+    public Tile tile { get; protected set; }
 
     // This "objectType" will be queried by the visual system to know what sprite to render for this object
-    public string objectType
-    {
-        get; protected set;
-    }
+    public string objectType { get; protected set; }
 
     // This is a multipler. So a value of "2" here, means you move twice as slowly (i.e. at half speed)
     // Tile types and other environmental effects may be combined.
@@ -60,10 +50,7 @@ public class Furniture : IXmlSerializable
     int width;
     int height;
 
-    public bool linksToNeighbour
-    {
-        get; protected set;
-    }
+    public bool linksToNeighbour { get; protected set; }
 
     public Action<Furniture> cbOnChanged;
 
@@ -76,16 +63,14 @@ public class Furniture : IXmlSerializable
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     // Empty constructor is used for serialization
-    public Furniture()
-    {
+    public Furniture() {
         furnParameters = new Dictionary<string, float>();
         jobs = new List<Job>();
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     // Copy Constructor
-    protected Furniture(Furniture other)
-    {
+    protected Furniture(Furniture other) {
         this.objectType = other.objectType;
         this.movementCost = other.movementCost;
         this.roomEnclosure = other.roomEnclosure;
@@ -97,21 +82,20 @@ public class Furniture : IXmlSerializable
         this.jobs = new List<Job>();
 
         if (other.updateActions != null)
-            this.updateActions = (Action<Furniture, float>)other.updateActions.Clone();
+            this.updateActions = (Action<Furniture, float>) other.updateActions.Clone();
 
         this.IsEnterable = other.IsEnterable;
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
-    virtual public Furniture Clone()
-    {
+    virtual public Furniture Clone() {
         return new Furniture(this);
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     // Create furniture from parameters -- this will probably ONLY ever be used for prototypes
-    public Furniture(string objectType, float movementCost = 1f, int width = 1, int height = 1, bool linksToNeighbour = false, bool roomEnclosure = false)
-    {
+    public Furniture(string objectType, float movementCost = 1f, int width = 1, int height = 1, bool linksToNeighbour = false,
+        bool roomEnclosure = false) {
         this.objectType = objectType;
         this.movementCost = movementCost;
         this.roomEnclosure = roomEnclosure;
@@ -125,10 +109,8 @@ public class Furniture : IXmlSerializable
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
-    public float GetFurnitureParameter(string key, float default_val = 0.0f)
-    {
-        if (furnParameters.ContainsKey(key) == false)
-        {
+    public float GetFurnitureParameter(string key, float default_val = 0.0f) {
+        if (furnParameters.ContainsKey(key) == false) {
             return default_val;
         }
 
@@ -136,30 +118,24 @@ public class Furniture : IXmlSerializable
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
-    public void SetFurnitureParameter(string key, float value)
-    {
+    public void SetFurnitureParameter(string key, float value) {
         furnParameters[key] = value;
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
-    public void ChangeFurnitureParameter(string key, float value)
-    {
-        if (furnParameters.ContainsKey(key) == false)
-        {
+    public void ChangeFurnitureParameter(string key, float value) {
+        if (furnParameters.ContainsKey(key) == false) {
             furnParameters[key] = value;
         }
-        else
-        {
+        else {
             furnParameters[key] += value;
         }
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
-    static public Furniture PlaceInstance(Furniture proto, Tile tile)
-    {
-        if (proto.funcPositionValidation(tile) == false)
-        {
-            Debug.LogError("PlaceInstance -- Position Validity Function returned FALSE.");
+    static public Furniture PlaceInstance(Furniture proto, Tile tile) {
+        if (proto.funcPositionValidation(tile) == false) {
+            Debug.LogError("[Furniture::PlaceInstance] Position Validity Function returned FALSE.");
             return null;
         }
 
@@ -168,8 +144,7 @@ public class Furniture : IXmlSerializable
         obj.tile = tile;
 
         // FIXME: This assumes we are 1x1!
-        if (tile.PlaceFurniture(obj) == false)
-        {
+        if (tile.PlaceFurniture(obj) == false) {
             // For some reason, we weren't able to place our object in this tile.
             // (Probably it was already occupied.)
 
@@ -178,8 +153,7 @@ public class Furniture : IXmlSerializable
             return null;
         }
 
-        if (obj.linksToNeighbour)
-        {
+        if (obj.linksToNeighbour) {
             // This type of furniture links itself to its neighbours,
             // so we should inform our neighbours that they have a new
             // buddy.  Just trigger their OnChangedCallback.
@@ -189,65 +163,57 @@ public class Furniture : IXmlSerializable
             int y = tile.Y;
 
             t = tile.world.GetTileAt(x, y + 1);
-            if (t != null && t.furniture != null && t.furniture.cbOnChanged != null && t.furniture.objectType == obj.objectType)
-            {
+            if (t != null && t.furniture != null && t.furniture.cbOnChanged != null && t.furniture.objectType == obj.objectType) {
                 // We have a Northern Neighbour with the same object type as us, so
                 // tell it that it has changed by firing is callback.
                 t.furniture.cbOnChanged(t.furniture);
             }
+
             t = tile.world.GetTileAt(x + 1, y);
-            if (t != null && t.furniture != null && t.furniture.cbOnChanged != null && t.furniture.objectType == obj.objectType)
-            {
-                t.furniture.cbOnChanged(t.furniture);
-            }
-            t = tile.world.GetTileAt(x, y - 1);
-            if (t != null && t.furniture != null && t.furniture.cbOnChanged != null && t.furniture.objectType == obj.objectType)
-            {
-                t.furniture.cbOnChanged(t.furniture);
-            }
-            t = tile.world.GetTileAt(x - 1, y);
-            if (t != null && t.furniture != null && t.furniture.cbOnChanged != null && t.furniture.objectType == obj.objectType)
-            {
+            if (t != null && t.furniture != null && t.furniture.cbOnChanged != null && t.furniture.objectType == obj.objectType) {
                 t.furniture.cbOnChanged(t.furniture);
             }
 
+            t = tile.world.GetTileAt(x, y - 1);
+            if (t != null && t.furniture != null && t.furniture.cbOnChanged != null && t.furniture.objectType == obj.objectType) {
+                t.furniture.cbOnChanged(t.furniture);
+            }
+
+            t = tile.world.GetTileAt(x - 1, y);
+            if (t != null && t.furniture != null && t.furniture.cbOnChanged != null && t.furniture.objectType == obj.objectType) {
+                t.furniture.cbOnChanged(t.furniture);
+            }
         }
 
         return obj;
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
-    public void RegisterOnChangedCallback(Action<Furniture> callbackFunc)
-    {
+    public void RegisterOnChangedCallback(Action<Furniture> callbackFunc) {
         cbOnChanged += callbackFunc;
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
-    public void UnregisterOnChangedCallback(Action<Furniture> callbackFunc)
-    {
+    public void UnregisterOnChangedCallback(Action<Furniture> callbackFunc) {
         cbOnChanged -= callbackFunc;
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
-    public bool IsValidPosition(Tile t)
-    {
+    public bool IsValidPosition(Tile t) {
         return funcPositionValidation(t);
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     // FIXME: These functions should never be called directly,
     // so they probably shouldn't be public functions of Furniture
-    protected bool DEFAULT__IsValidPosition(Tile t)
-    {
+    protected bool DEFAULT__IsValidPosition(Tile t) {
         // Make sure tile is FLOOR
-        if (t.Type != TileType.Floor)
-        {
+        if (t.Type != TileType.Floor) {
             return false;
         }
 
         // Make sure tile doesn't already have furniture
-        if (t.furniture != null)
-        {
+        if (t.furniture != null) {
             return false;
         }
 
@@ -258,21 +224,21 @@ public class Furniture : IXmlSerializable
     public int JobCount() {
         return jobs.Count;
     }
-    
+
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     public void AddJob(Job job) {
         jobs.Add(job);
-        
+
         tile.world.jobQueue.Enqueue(job);
     }
-    
+
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     public void RemoveJob(Job job) {
         jobs.Remove(job);
         job.CancelJob();
         tile.world.jobQueue.Remove(job);
     }
-    
+
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     public void ClearJobs() {
         foreach (var job in jobs) {
@@ -282,14 +248,12 @@ public class Furniture : IXmlSerializable
 
     //  Registers an action that will be called every Update
     //////////////////////////////////////////////////////////////////////////////////////////////////////
-    public void RegisterUpdateAction(Action<Furniture, float> action)
-    {
+    public void RegisterUpdateAction(Action<Furniture, float> action) {
         updateActions += action;
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
-    public void UnregisterUpdateAction(Action<Furniture, float> action)
-    {
+    public void UnregisterUpdateAction(Action<Furniture, float> action) {
         updateActions -= action;
     }
 
@@ -300,47 +264,38 @@ public class Furniture : IXmlSerializable
     /// 						SAVING & LOADING
     /// 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
-    public XmlSchema GetSchema()
-    {
+    public XmlSchema GetSchema() {
         return null;
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
-    public void WriteXml(XmlWriter writer)
-    {
+    public void WriteXml(XmlWriter writer) {
         writer.WriteAttributeString("X", tile.X.ToString());
         writer.WriteAttributeString("Y", tile.Y.ToString());
         writer.WriteAttributeString("objectType", objectType);
         //writer.WriteAttributeString( "movementCost", movementCost.ToString() );
 
-        foreach (string k in furnParameters.Keys)
-        {
+        foreach (string k in furnParameters.Keys) {
             writer.WriteStartElement("Param");
             writer.WriteAttributeString("name", k);
             writer.WriteAttributeString("value", furnParameters[k].ToString());
             writer.WriteEndElement();
         }
-
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
-    public void ReadXml(XmlReader reader)
-    {
+    public void ReadXml(XmlReader reader) {
         // X, Y, and objectType have already been set, and we should already
         // be assigned to a tile.  So just read extra data.
 
         //movementCost = int.Parse( reader.GetAttribute("movementCost") );
 
-        if (reader.ReadToDescendant("Param"))
-        {
-            do
-            {
+        if (reader.ReadToDescendant("Param")) {
+            do {
                 string k = reader.GetAttribute("name");
                 float v = float.Parse(reader.GetAttribute("value"));
                 furnParameters[k] = v;
             } while (reader.ReadToNextSibling("Param"));
         }
     }
-
-
 }

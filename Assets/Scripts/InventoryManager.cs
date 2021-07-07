@@ -59,7 +59,7 @@ public class InventoryManager {
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     public bool PlaceInventoryOnJob(Job job, Inventory inv) {
         if (job.inventoryRequirements.ContainsKey(inv.objectType) == false) {
-            Debug.LogError("Trying to add inventory to a job that it doesn't want.");
+            Debug.LogError("[InventoryManager::PlaceInventoryOnJob] Trying to add inventory to a job that it doesn't want.");
             return false;
         }
 
@@ -99,7 +99,7 @@ public class InventoryManager {
             inventories[character.inventory.objectType].Add(character.inventory);
         }
         else if (character.inventory.objectType != sourceInventory.objectType) {
-            Debug.LogError("Character is trying to pick up a mismatched inventory object type.");
+            Debug.LogError("[InventoryManager::PlaceInventoryOnCharacter] Character is trying to pick up a mismatched inventory object type.");
             return false;
         }
 
@@ -135,7 +135,7 @@ public class InventoryManager {
         //		 has room content optimization.)
 
         if (inventories.ContainsKey(objectType) == false) {
-            Debug.LogError("GetClosestInventoryOfType -- no items of desired type.");
+            Debug.LogError("[InventoryManager::GetClosestInventoryOfType] No items of desired type.");
             return null;
         }
 

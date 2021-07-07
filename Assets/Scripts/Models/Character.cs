@@ -115,7 +115,7 @@ public class Character : IXmlSerializable {
                         }
                         else {
                             Debug.LogError(
-                                "Character is still carrying inventory, which shouldn't be. Just setting to NULL for now, but this means we are LEAKING inventory.");
+                                "[Character::Update_DoJob] Character is still carrying inventory, which shouldn't be. Just setting to NULL for now, but this means we are LEAKING inventory.");
 
                             inventory = null;
                         }
@@ -220,7 +220,7 @@ public class Character : IXmlSerializable {
                 // Generate a path to our destination
                 pathAStar = new Path_AStar(currTile.world, currTile, destTile); // This will calculate a path from curr to dest.
                 if (pathAStar.Length() == 0) {
-                    Debug.LogError("Path_AStar returned no path to destination!");
+                    Debug.LogError("[Character::Update_DoMovement] Path_AStar returned no path to destination!");
                     AbandonJob();
                     return;
                 }
@@ -234,7 +234,7 @@ public class Character : IXmlSerializable {
             nextTile = pathAStar.Dequeue();
 
             if (nextTile == currTile) {
-                Debug.LogError("Update_DoMovement - nextTile is currTile?");
+                Debug.LogError("[Character::Update_DoMovement] nextTile is currTile?");
             }
         }
 
@@ -259,7 +259,7 @@ public class Character : IXmlSerializable {
             //		  so that we don't waste a bunch of time walking towards a dead end.
             //		  To save CPU, maybe we can only check every so often?
             //		  Or maybe we should register a callback to the OnTileChanged event?
-            Debug.LogError("FIXME: A character was trying to enter an unwalkable tile.");
+            Debug.LogError("[Character::Update_DoMovement] FIXME: A character was trying to enter an unwalkable tile.");
             nextTile = null; // our next tile is a no-go
             pathAStar = null; // clearly our pathfinding info is out of date.
             return;
@@ -309,7 +309,7 @@ public class Character : IXmlSerializable {
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     public void SetDestination(Tile tile) {
         if (currTile.IsNeighbour(tile, true) == false) {
-            Debug.Log("Character::SetDestination -- Our destination tile isn't actually our neighbour.");
+            Debug.Log("[Character::SetDestination] Our destination tile isn't actually our neighbour.");
         }
 
         destTile = tile;
@@ -330,7 +330,7 @@ public class Character : IXmlSerializable {
         // Job completed or was cancelled.
 
         if (j != myJob) {
-            Debug.LogError("Character being told about job that isn't his. You forgot to unregister something.");
+            Debug.LogError("[Character::OnJobEnded] Character being told about job that isn't his. You forgot to unregister something.");
             return;
         }
 

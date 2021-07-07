@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine.EventSystems;
 
-public class MouseController : MonoBehaviour
-{
-
+public class MouseController : MonoBehaviour {
     public GameObject circleCursorPrefab;
 
     // The world-position of the mouse last frame.
@@ -14,35 +12,30 @@ public class MouseController : MonoBehaviour
     // The world-position start of our left-mouse drag operation
     Vector3 dragStartPosition;
     List<GameObject> dragPreviewGameObjects;
-    
+
     bool shouldDrawPreview;
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     // Use this for initialization
-    void Start()
-    {
+    void Start() {
         dragPreviewGameObjects = new List<GameObject>();
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
-    public Vector3 GetMousePosition()
-    {
-
+    public Vector3 GetMousePosition() {
         return currFramePosition;
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
-    public Tile GetMouseoverTile()
-    {
+    public Tile GetMouseoverTile() {
         return WorldController.Instance.GetTileAtWorldCoord(currFramePosition);
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     // Update is called once per frame
-    void Update()
-    {
+    void Update() {
         currFramePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         currFramePosition.z = 0;
 
@@ -57,11 +50,9 @@ public class MouseController : MonoBehaviour
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
-    void UpdateDragging()
-    {
+    void UpdateDragging() {
         // If we're over a UI element, then bail out from this.
-        if (EventSystem.current.IsPointerOverGameObject())
-        {
+        if (EventSystem.current.IsPointerOverGameObject()) {
             return;
         }
 
@@ -77,41 +68,35 @@ public class MouseController : MonoBehaviour
         int end_y = Mathf.FloorToInt(currFramePosition.y + 0.5f);
 
         // We may be dragging in the "wrong" direction, so flip things if needed.
-        if (end_x < start_x)
-        {
+        if (end_x < start_x) {
             int tmp = end_x;
             end_x = start_x;
             start_x = tmp;
         }
-        if (end_y < start_y)
-        {
+
+        if (end_y < start_y) {
             int tmp = end_y;
             end_y = start_y;
             start_y = tmp;
         }
 
         // Clean up old drag previews
-        while (dragPreviewGameObjects.Count > 0)
-        {
+        while (dragPreviewGameObjects.Count > 0) {
             GameObject go = dragPreviewGameObjects[0];
             dragPreviewGameObjects.RemoveAt(0);
             SimplePool.Despawn(go);
         }
-        
+
         if (Input.GetMouseButtonDown(1)) {
             shouldDrawPreview = false;
         }
 
-        if (Input.GetMouseButton(0) && shouldDrawPreview)
-        {
+        if (Input.GetMouseButton(0) && shouldDrawPreview) {
             // Display a preview of the drag area
-            for (int x = start_x; x <= end_x; x++)
-            {
-                for (int y = start_y; y <= end_y; y++)
-                {
+            for (int x = start_x; x <= end_x; x++) {
+                for (int y = start_y; y <= end_y; y++) {
                     Tile t = WorldController.Instance.world.GetTileAt(x, y);
-                    if (t != null)
-                    {
+                    if (t != null) {
                         // Display the building hint on top of this tile position
                         GameObject go = SimplePool.Spawn(circleCursorPrefab, new Vector3(x, y, 0), Quaternion.identity);
                         go.transform.SetParent(this.transform, true);
@@ -122,20 +107,15 @@ public class MouseController : MonoBehaviour
         }
 
         // End Drag
-        if (Input.GetMouseButtonUp(0) && shouldDrawPreview)
-        {
-
+        if (Input.GetMouseButtonUp(0) && shouldDrawPreview) {
             BuildModeController bmc = GameObject.FindObjectOfType<BuildModeController>();
 
             // Loop through all the tiles
-            for (int x = start_x; x <= end_x; x++)
-            {
-                for (int y = start_y; y <= end_y; y++)
-                {
+            for (int x = start_x; x <= end_x; x++) {
+                for (int y = start_y; y <= end_y; y++) {
                     Tile t = WorldController.Instance.world.GetTileAt(x, y);
 
-                    if (t != null)
-                    {
+                    if (t != null) {
                         // Call BuildModeController::DoBuild()
                         bmc.DoBuild(t);
                     }
@@ -147,15 +127,12 @@ public class MouseController : MonoBehaviour
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
-    void UpdateCameraMovement()
-    {
+    void UpdateCameraMovement() {
         // Handle screen panning
-        if (Input.GetMouseButton(1) || Input.GetMouseButton(2))
-        {   // Right or Middle Mouse Button
+        if (Input.GetMouseButton(1) || Input.GetMouseButton(2)) { // Right or Middle Mouse Button
 
             Vector3 diff = lastFramePosition - currFramePosition;
             Camera.main.transform.Translate(diff);
-
         }
 
         Camera.main.orthographicSize -= Camera.main.orthographicSize * Input.GetAxis("Mouse ScrollWheel");
