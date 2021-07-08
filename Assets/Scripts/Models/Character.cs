@@ -115,7 +115,7 @@ public class Character : IXmlSerializable {
                         }
                         else {
                             Debug.LogError(
-                                "Character is still carrying inventory, which shouldn't be. Just setting to NULL for now, but this means we are LEAKING inventory.");
+                                "[Character::Update_DoJob] Character is still carrying inventory, which shouldn't be. Just setting to NULL for now, but this means we are LEAKING inventory.");
 
                             inventory = null;
                         }
@@ -145,7 +145,12 @@ public class Character : IXmlSerializable {
                 // At this point, the job still requires inventory, but we aren't carrying it!
 
                 // Are we standing on a tile with goods that are desired by the job?
-                if (currTile.inventory != null && myJob.DesiresInventoryType(currTile.inventory) > 0) {
+                // Also, we want to make sure that either:
+                // --- We are allowed to take inventory from a stockpile (maybe we are standing on stockpile furniture)
+                // --- We are not standing on any furniture
+                // --- We are not standing specifically on a stockpile
+                if (currTile.inventory != null && myJob.DesiresInventoryType(currTile.inventory) > 0 && 
+                    (myJob.canTakeInventoryFromStockpile || currTile.furniture == null || !currTile.furniture.IsStockpile())) {
                     // Pick up the stuff!
 
                     currTile.world.inventoryManager.PlaceInventoryOnCharacter(
@@ -162,7 +167,8 @@ public class Character : IXmlSerializable {
                     Inventory supplier = currTile.world.inventoryManager.GetClosestInventoryOfType(
                         desired.objectType,
                         currTile,
-                        desired.maxStackSize - desired.stackSize
+                        desired.maxStackSize - desired.stackSize,
+                        myJob.canTakeInventoryFromStockpile
                     );
 
                     if (supplier == null) {
@@ -220,7 +226,7 @@ public class Character : IXmlSerializable {
                 // Generate a path to our destination
                 pathAStar = new Path_AStar(currTile.world, currTile, destTile); // This will calculate a path from curr to dest.
                 if (pathAStar.Length() == 0) {
-                    Debug.LogError("Path_AStar returned no path to destination!");
+                    Debug.LogError("[Character::Update_DoMovement] Path_AStar returned no path to destination!");
                     AbandonJob();
                     return;
                 }
@@ -234,7 +240,7 @@ public class Character : IXmlSerializable {
             nextTile = pathAStar.Dequeue();
 
             if (nextTile == currTile) {
-                Debug.LogError("Update_DoMovement - nextTile is currTile?");
+                Debug.LogError("[Character::Update_DoMovement] nextTile is currTile?");
             }
         }
 
@@ -259,7 +265,7 @@ public class Character : IXmlSerializable {
             //		  so that we don't waste a bunch of time walking towards a dead end.
             //		  To save CPU, maybe we can only check every so often?
             //		  Or maybe we should register a callback to the OnTileChanged event?
-            Debug.LogError("FIXME: A character was trying to enter an unwalkable tile.");
+            Debug.LogError("[Character::Update_DoMovement] FIXME: A character was trying to enter an unwalkable tile.");
             nextTile = null; // our next tile is a no-go
             pathAStar = null; // clearly our pathfinding info is out of date.
             return;
@@ -309,7 +315,7 @@ public class Character : IXmlSerializable {
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     public void SetDestination(Tile tile) {
         if (currTile.IsNeighbour(tile, true) == false) {
-            Debug.Log("Character::SetDestination -- Our destination tile isn't actually our neighbour.");
+            Debug.Log("[Character::SetDestination] Our destination tile isn't actually our neighbour.");
         }
 
         destTile = tile;
@@ -328,9 +334,12 @@ public class Character : IXmlSerializable {
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     void OnJobEnded(Job j) {
         // Job completed or was cancelled.
+        
+        j.UnregisterJobCancelCallback(OnJobEnded);
+        j.UnregisterJobCompleteCallback(OnJobEnded);
 
         if (j != myJob) {
-            Debug.LogError("Character being told about job that isn't his. You forgot to unregister something.");
+            Debug.LogError("[Character::OnJobEnded] Character being told about job that isn't his. You forgot to unregister something.");
             return;
         }
 
