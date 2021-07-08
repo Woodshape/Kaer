@@ -54,6 +54,7 @@ public class JobQueue {
 
         if (jobs.Contains(j) == false) {
             //  Most likely we are trying to remove a job that we are still assigned
+            //  This is technically not a problem, so we simply bail out
             return;
         }
 
