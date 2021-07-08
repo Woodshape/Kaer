@@ -146,11 +146,11 @@ public class Character : IXmlSerializable {
 
                 // Are we standing on a tile with goods that are desired by the job?
                 // Also, we want to make sure that either:
+                // --- We are allowed to take inventory from a stockpile (maybe we are standing on stockpile furniture)
                 // --- We are not standing on any furniture
                 // --- We are not standing specifically on a stockpile
-                // --- We are allowed to take inventory from a stockpile (maybe we are standing on stockpile furniture)
                 if (currTile.inventory != null && myJob.DesiresInventoryType(currTile.inventory) > 0 && 
-                    (currTile.furniture == null || !currTile.furniture.IsStockpile() || (currTile.furniture.IsStockpile() && myJob.canTakeInventoryFromStockpile))) {
+                    (myJob.canTakeInventoryFromStockpile || currTile.furniture == null || !currTile.furniture.IsStockpile())) {
                     // Pick up the stuff!
 
                     currTile.world.inventoryManager.PlaceInventoryOnCharacter(
@@ -167,7 +167,8 @@ public class Character : IXmlSerializable {
                     Inventory supplier = currTile.world.inventoryManager.GetClosestInventoryOfType(
                         desired.objectType,
                         currTile,
-                        desired.maxStackSize - desired.stackSize
+                        desired.maxStackSize - desired.stackSize,
+                        myJob.canTakeInventoryFromStockpile
                     );
 
                     if (supplier == null) {
@@ -333,6 +334,9 @@ public class Character : IXmlSerializable {
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     void OnJobEnded(Job j) {
         // Job completed or was cancelled.
+        
+        j.UnregisterJobCancelCallback(OnJobEnded);
+        j.UnregisterJobCompleteCallback(OnJobEnded);
 
         if (j != myJob) {
             Debug.LogError("[Character::OnJobEnded] Character being told about job that isn't his. You forgot to unregister something.");

@@ -51,6 +51,9 @@ public class InventoryManager {
             }
 
             inventories[tile.inventory.objectType].Add(tile.inventory);
+            
+            //  Inform the world that a new inventory was created on an empty tile
+            tile.world.OnInventoryCreated(tile.inventory);
         }
 
         return true;
@@ -126,7 +129,8 @@ public class InventoryManager {
     /// <param name="objectType">Object type.</param>
     /// <param name="t">T.</param>
     /// <param name="desiredAmount">Desired amount. If no stack has enough, it instead returns the largest</param>
-    public Inventory GetClosestInventoryOfType(string objectType, Tile t, int desiredAmount) {
+    /// <param name="canTakeFromStockpile">Flag that determines whether or not we are allowed to take the inventory from a stockpile</param>
+    public Inventory GetClosestInventoryOfType(string objectType, Tile t, int desiredAmount, bool canTakeFromStockpile) {
         // FIXME:
         //   a) We are LYING about returning the closest item.
         //   b) There's no way to return the closest item in an optimal manner
@@ -140,7 +144,8 @@ public class InventoryManager {
         }
 
         foreach (Inventory inv in inventories[objectType]) {
-            if (inv.tile != null) {
+            if (inv.tile != null && 
+                (canTakeFromStockpile || inv.tile.furniture == null || !inv.tile.furniture.IsStockpile())) {
                 return inv;
             }
         }
